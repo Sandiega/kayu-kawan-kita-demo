@@ -2267,7 +2267,7 @@ class ApiClient {
 }
 exports.ApiClient = ApiClient;
 exports.api = new ApiClient();
-exports.connected = typeof window !== 'undefined' && ['http:', 'https:'].includes(window.location.protocol);
+exports.connected = false; /* demo build: always run in offline demo mode */
 
 },
 "services/auth-service.js":function(require,module,exports){"use strict";

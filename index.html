@@ -45,6 +45,8 @@
 .sidebar nav{min-height:0;overscroll-behavior:contain}.sidebar>.brand,.sidebar>.workspace-switch,.sidebar-bottom{flex-shrink:0}
 .user-filters{display:flex;align-items:end;gap:12px;flex-wrap:wrap;padding:20px;border-bottom:1px solid var(--border)}
 .user-filters label{flex:1;min-width:140px;margin:0}.user-filters label input,.user-filters label select{margin-top:6px}.user-filters .button{flex-shrink:0}
+
+input:focus,select:focus,textarea:focus{outline-color:#8993a655;border-color:#8993a6}
 </style><title>Kayu Kawan Kita</title></head><body><div id="app"></div><div id="overlay-root"></div><div id="toast" role="status" aria-live="polite"></div><script>const modules={"components/atomic/button-component.js":function(require,module,exports){"use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.button = button;
@@ -2047,7 +2049,7 @@ async function usersPage() {
     if (!(0, access_service_js_1.isAdmin)(app_store_js_1.state.session))
         throw new Error('Halaman kelola user hanya untuk admin.');
     const params = new URLSearchParams(window.location.hash.split('?')[1] || '');
-    const offset = Math.max(0, Math.min(1000000, Number(params.get('offset')) || 0));
+    const offset = Math.max(0, Math.min(1000000, Math.floor(Number(params.get('offset')) || 0)));
     const query = new URLSearchParams({ paged: '1', limit: '25', offset: String(offset) });
     for (const key of ['name', 'email', 'role', 'status'])
         if (params.get(key))

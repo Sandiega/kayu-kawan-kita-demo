@@ -26,6 +26,8 @@ select{appearance:none;-webkit-appearance:none;padding-right:42px;background-ima
 @media print{.modal-body>:not(.print-label){display:none!important}.modal-body{padding:0}.print-label{max-width:none;border:1px solid #000;border-radius:0;margin:0;color:#000;box-shadow:none}.label-qr svg{width:48mm;height:48mm}.print-label .label-item-name{font-family:Arial,sans-serif}.print-label p{color:#000!important}}
 
 .demo-home{max-width:1200px;padding:64px 32px;margin:auto}.demo-intro{max-width:760px;margin-bottom:36px}.demo-intro h1{font-size:42px;letter-spacing:-1.6px;margin:12px 0 16px}.demo-intro>p{font-size:15px;line-height:1.8;color:#66766c}.demo-meta{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}.demo-meta span{background:#e8eee9;color:#43554e;padding:7px 12px;border-radius:30px;font-size:11px}.demo-role-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}.demo-role-card{padding:26px;display:flex;flex-direction:column;align-items:flex-start}.demo-number{font:600 11px monospace;color:#768a7b;margin-bottom:20px}.demo-role-card h2{font-size:22px}.demo-role-card h3{font-size:12px;margin:10px 0;color:#43554e}.demo-role-card p,.demo-role-card li{font-size:12px;line-height:1.8;color:#768078}.demo-role-card ol{padding-left:18px;margin:20px 0 26px;flex:1}.demo-role-card .button{width:100%;min-height:44px}.demo-about{display:flex;gap:30px;align-items:center;padding:28px;margin-top:24px}.demo-about>div:first-child{flex:1}.demo-about h2{font-size:16px}.demo-about p{font-size:12px;color:#718077;line-height:1.8;margin-top:12px}.demo-banner{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#eaf0eb;border:1px solid #d7e0d9;padding:16px 20px;border-radius:8px;margin-bottom:22px}.demo-banner p{font-size:11px;line-height:1.6;color:#64766b;margin-top:5px}@media(max-width:900px){.demo-role-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:600px){.demo-home{padding:32px 18px}.demo-intro h1{font-size:32px}.demo-role-grid{grid-template-columns:1fr}.demo-about{flex-direction:column;align-items:flex-start}.demo-banner{align-items:flex-start}.demo-banner .button{min-height:44px}}
+
+.table-pagination{gap:16px;flex-wrap:wrap;border-top:1px solid #edf0f5}.table-pagination label{flex-direction:row;align-items:center;gap:10px;margin:0;font-size:11px;font-weight:400}.table-pagination select{width:80px;min-height:36px;padding:7px 32px 7px 10px;background-position:right 8px center}.table-pagination>div{align-items:center;flex-wrap:wrap;gap:12px}.table-pagination .button:disabled{cursor:not-allowed;opacity:.4}@media(max-width:640px){.table-pagination{padding:15px}.table-pagination>div{width:100%;justify-content:space-between}.table-pagination .button{min-height:44px}.table-pagination select{min-height:44px}}
 </style><title>VinFast Warehouse</title></head><body><div id="app"></div><div id="overlay-root"></div><div id="toast" role="status" aria-live="polite"></div><script>(function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -12546,6 +12548,7 @@ function notify(text) { const toast = document.querySelector('#toast'); toast.in
 },
 "index.js":function(require,module,exports){"use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const pagination_js_1 = require("./wms/pagination.js");
 const demo_js_1 = require("./wms/demo.js");
 const access_js_1 = require("./wms/access.js");
 const qr_content_js_1 = require("./wms/qr-content.js");
@@ -12570,7 +12573,7 @@ const engine = new domain_js_1.Warehouse(data, server_js_1.connected ? 'Admin' :
 const w = server_js_1.connected ? (0, server_js_1.remote)(engine) : engine;
 let session = null, ready = !server_js_1.connected, busy = false;
 let company = { name: 'VinFast Warehouse', email: '', address: 'Gudang utama · Indonesia', logo: '', version: 0 };
-let users = [], userTotal = 0, userOffset = 0, userQuery = '', userRole = '', userStatus = '', userLoading = false;
+let users = [], userTotal = 0, userOffset = 0, userPageSize = 25, userQuery = '', userRole = '', userStatus = '', userLoading = false;
 const isAdmin = () => server_js_1.connected ? (0, server_js_1.administrator)(session) : w.role === 'Admin';
 let pendingLogo = '';
 let currentDetail = null, detailError = '';
@@ -12583,7 +12586,17 @@ const product = (sku) => data.products.find(p => p.sku === sku)?.name || sku;
 const badge = (s) => `<span class="badge ${/Selesai|Tersimpan|Terverifikasi|Baik/.test(s) ? 'green' : /Ditahan|Review|Terbuka|rusak/.test(s) ? 'red' : /Siap|Diproses|Penghitungan/.test(s) ? 'amber' : 'blue'}"><i></i>${h(s)}</span>`;
 const btn = (label, action, id = '', cls = 'secondary') => `<button type="button" class="button ${cls}" data-action="${action}" data-id="${h(id)}">${h(label)}</button>`;
 const link = (p, label) => (0, access_js_1.canPage)(w.role, p) ? `<a class="text-link" href="#/${p}">${label} ${(0, icon_js_1.icon)('arrow', 15)}</a>` : '';
-const table = (heads, rows) => `<div class="table-wrap"><table><thead><tr>${heads.map(x => `<th>${x}</th>`).join('')}</tr></thead><tbody>${rows.length ? rows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('') : `<tr><td colspan="${heads.length}"><div class="empty">${(0, icon_js_1.icon)('inventory', 30)}<strong>Belum ada data</strong><span>Data yang sesuai akan muncul di sini.</span></div></td></tr>`}</tbody></table></div>`;
+const tablePages = new Map();
+function resetTablePages() { for (const state of tablePages.values())
+    state.page = 1; }
+function table(heads, rows, localPagination = true) {
+    const id = page + ':' + heads.join('|'), state = tablePages.get(id) || { page: 1, size: 10 };
+    const result = (0, pagination_js_1.paginate)(rows, state.page, state.size);
+    state.page = result.page;
+    tablePages.set(id, state);
+    const visible = localPagination ? result.items : rows;
+    return `<div class="table-wrap"><table><thead><tr>${heads.map(x => `<th>${x}</th>`).join('')}</tr></thead><tbody>${visible.length ? visible.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('') : `<tr><td colspan="${heads.length}"><div class="empty">${(0, icon_js_1.icon)('inventory', 30)}<strong>Belum ada data</strong><span>Data yang sesuai akan muncul di sini.</span></div></td></tr>`}</tbody></table></div>${localPagination ? `<div class="pagination table-pagination"><label>Baris per halaman<select aria-label="Baris per halaman" data-table-size="${h(id)}">${pagination_js_1.pageSizes.map(size => `<option value="${size}" ${size === result.size ? 'selected' : ''}>${size}</option>`).join('')}</select></label><span aria-live="polite">${result.start}–${result.end} dari ${result.total} data</span><div><button type="button" class="button secondary" data-action="table-prev" data-id="${h(id)}" ${result.page === 1 ? 'disabled' : ''}>Sebelumnya</button><span>Halaman ${result.page} / ${result.pages}</span><button type="button" class="button secondary" data-action="table-next" data-id="${h(id)}" ${result.page === result.pages ? 'disabled' : ''}>Berikutnya</button></div></div>` : ''}`;
+}
 const eventName = (s) => s.replace(/\bGR\b/g, 'Good Receipt').replace(/\bGI\b/g, 'Good Issue');
 const match = (v) => JSON.stringify(v).toLowerCase().includes(query.toLowerCase());
 const tools = (placeholder = 'Cari nomor, barang, atau lokasi…', statuses = []) => `<div class="toolbar"><div class="search">${(0, icon_js_1.icon)('search')}<input id="search" aria-label="Cari data" placeholder="${placeholder}" value="${h(query)}"></div>${statuses.length ? `<select id="filter" aria-label="Filter status">${['Semua', ...statuses].map(s => `<option ${filter === s ? 'selected' : ''}>${s}</option>`).join('')}</select>` : ''}<span class="muted">${(0, icon_js_1.icon)('filter', 15)} Filter data</span></div>`;
@@ -12699,6 +12712,14 @@ function label(id) {
 }
 document.addEventListener('click', async (event) => { const el = event.target.closest('[data-action]'); if (!el)
     return; const a = el.dataset.action, id = el.dataset.id || ''; try {
+    if (a === 'table-prev' || a === 'table-next') {
+        const state = tablePages.get(id);
+        if (state) {
+            state.page += a === 'table-prev' ? -1 : 1;
+            document.querySelector('#page-content').innerHTML = contents();
+        }
+        return;
+    }
     if (!server_js_1.connected && a === 'demo-home') {
         showDemoHome = true;
         close();
@@ -12712,10 +12733,11 @@ document.addEventListener('click', async (event) => { const el = event.target.cl
         sessionStorage.setItem('wms-role', w.role);
         sessionStorage.setItem('wms-demo-entered', '1');
         showDemoHome = false;
-        page = (0, access_js_1.homePage)(w.role);
+        page = location.hash.startsWith('#/units/') ? location.hash.slice(2) : (0, access_js_1.homePage)(w.role);
         history.replaceState(null, '', '#/' + page);
         query = '';
         filter = 'Semua';
+        await loadUnitDetail();
         render();
         return;
     }
@@ -12894,18 +12916,43 @@ catch (e) {
 } });
 document.addEventListener('input', e => { const t = e.target; if (t.id === 'search') {
     query = t.value;
+    resetTablePages();
     const start = t.selectionStart;
     document.querySelector('#page-content').innerHTML = contents();
     const next = document.querySelector('#search');
     next.focus();
     next.setSelectionRange(start, start);
 } });
-document.addEventListener('change', e => { const t = e.target; if (t.id === 'filter') {
+document.addEventListener('change', async (e) => { const t = e.target; if (t.id === 'users-page-size') {
+    const size = Number(t.value);
+    if (!pagination_js_1.pageSizes.includes(size))
+        return;
+    userPageSize = size;
+    userOffset = 0;
+    try {
+        await loadUsers();
+        render();
+    }
+    catch (error) {
+        toast(error instanceof Error ? error.message : 'Gagal memuat pengguna.');
+    }
+    return;
+} if (t.dataset.tableSize) {
+    const state = tablePages.get(t.dataset.tableSize);
+    const size = Number(t.value);
+    if (state && pagination_js_1.pageSizes.includes(size)) {
+        state.size = size;
+        state.page = 1;
+        document.querySelector('#page-content').innerHTML = contents();
+    }
+    return;
+} if (t.id === 'filter') {
     filter = t.value;
+    resetTablePages();
     document.querySelector('#page-content').innerHTML = contents();
 } });
 window.addEventListener('hashchange', async () => { page = location.hash.slice(2) || (0, access_js_1.homePage)(w.role); if (ready)
-    ensurePage(); query = ''; filter = 'Semua'; mobile = false; close(); try {
+    ensurePage(); query = ''; filter = 'Semua'; resetTablePages(); mobile = false; close(); try {
     if (server_js_1.connected && session) {
         data = await (0, server_js_1.snapshot)();
         w.data = data;
@@ -12949,7 +12996,7 @@ async function loadWorkspace() { if (!session)
     return; ready = false; w.role = (0, server_js_1.roleOf)(session); ensurePage(); const result = await Promise.all([(0, server_js_1.snapshot)(), server_js_1.api.request('/company')]); data = result[0]; w.data = data; company = result[1]; pendingLogo = company.logo; ready = true; if (page === 'access' && isAdmin())
     await loadUsers(); await loadUnitDetail(); render(); }
 async function loadUsers() { userLoading = true; try {
-    const q = new URLSearchParams({ paged: '1', limit: '25', offset: String(userOffset), name: userQuery, role: userRole, status: userStatus });
+    const q = new URLSearchParams({ paged: '1', limit: String(userPageSize), offset: String(userOffset), name: userQuery, role: userRole, status: userStatus });
     const result = await server_js_1.api.request('/users?' + q);
     users = result.items;
     userTotal = result.total;
@@ -12958,7 +13005,7 @@ finally {
     userLoading = false;
 } }
 function usersPage() { if (!isAdmin())
-    return ''; return panel('Anggota perusahaan', `<form class="user-filter toolbar" id="managed-user-filter"><label>Nama<input name="name" placeholder="Cari nama pengguna…" value="${h(userQuery)}"></label><label>Peran<select name="role"><option value="">Semua peran</option>${Object.entries(server_js_1.roleNames).map(([value, label]) => `<option value="${value}" ${userRole === value ? 'selected' : ''}>${h(label)}</option>`).join('')}</select></label><label>Status<select name="status"><option value="">Semua status</option><option value="active" ${userStatus === 'active' ? 'selected' : ''}>Aktif</option><option value="inactive" ${userStatus === 'inactive' ? 'selected' : ''}>Nonaktif</option></select></label><button class="button secondary" type="submit">Terapkan filter</button></form>${userLoading ? '<p class="pad">Memuat pengguna…</p>' : table(['NAMA', 'EMAIL', 'PERAN', 'STATUS', ''], users.map(u => [`<b>${h(u.name)}</b>${u.id === session?.id ? '<small>Akun Anda</small>' : ''}`, h(u.email), h(u.roles.map(r => server_js_1.roleNames[r] || r).join(', ')), badge(u.active ? 'Aktif' : 'Nonaktif'), btn('Kelola', 'edit-user', u.id)]))}<div class="pagination"><span>${userTotal} akun · ${userOffset + 1}–${Math.min(userOffset + 25, userTotal)}</span><div>${userOffset ? btn('Sebelumnya', 'users-prev') : ''}${userOffset + 25 < userTotal ? btn('Berikutnya', 'users-next') : ''}</div></div><div class="notice spaced">Perubahan akun mencabut sesi pengguna tersebut. Administrator aktif terakhir tidak dapat dinonaktifkan atau diturunkan perannya.</div>`); }
+    return ''; return panel('Anggota perusahaan', `<form class="user-filter toolbar" id="managed-user-filter"><label>Nama<input name="name" placeholder="Cari nama pengguna…" value="${h(userQuery)}"></label><label>Peran<select name="role"><option value="">Semua peran</option>${Object.entries(server_js_1.roleNames).map(([value, label]) => `<option value="${value}" ${userRole === value ? 'selected' : ''}>${h(label)}</option>`).join('')}</select></label><label>Status<select name="status"><option value="">Semua status</option><option value="active" ${userStatus === 'active' ? 'selected' : ''}>Aktif</option><option value="inactive" ${userStatus === 'inactive' ? 'selected' : ''}>Nonaktif</option></select></label><button class="button secondary" type="submit">Terapkan filter</button></form>${userLoading ? '<p class="pad">Memuat pengguna…</p>' : table(['NAMA', 'EMAIL', 'PERAN', 'STATUS', ''], users.map(u => [`<b>${h(u.name)}</b>${u.id === session?.id ? '<small>Akun Anda</small>' : ''}`, h(u.email), h(u.roles.map(r => server_js_1.roleNames[r] || r).join(', ')), badge(u.active ? 'Aktif' : 'Nonaktif'), btn('Kelola', 'edit-user', u.id)]), false)}<div class="pagination table-pagination"><label>Baris per halaman<select id="users-page-size" aria-label="Baris per halaman">${pagination_js_1.pageSizes.map(size => `<option value="${size}" ${size === userPageSize ? 'selected' : ''}>${size}</option>`).join('')}</select></label><span>${userTotal} akun · ${userTotal ? userOffset + 1 : 0}–${Math.min(userOffset + userPageSize, userTotal)}</span><div>${userOffset ? btn('Sebelumnya', 'users-prev') : ''}${userOffset + userPageSize < userTotal ? btn('Berikutnya', 'users-next') : ''}</div></div><div class="notice spaced">Perubahan akun mencabut sesi pengguna tersebut. Administrator aktif terakhir tidak dapat dinonaktifkan atau diturunkan perannya.</div>`); }
 function userForm(id = '') { if (!isAdmin())
     throw Error('Hanya admin dapat mengelola pengguna.'); const u = users.find(u => u.id === id); if (id && !u)
     throw Error('Muat ulang daftar pengguna.'); const legacy = u && (u.roles.length !== 1 || !Object.keys(server_js_1.roleNames).includes(u.roles[0])); modal(u ? 'Kelola pengguna' : 'Tambah pengguna', `<div class="form-grid">${input('name', 'Nama lengkap', '', true, u?.name)}${input('email', 'Email', '', true, u?.email, 'email')}</div>${input('password', u ? 'Kata sandi baru (kosongkan jika tetap)' : 'Kata sandi', 'Minimal 12 karakter', !u, '', 'password')}<p>12–72 karakter, mencakup huruf kapital, angka, dan simbol. Maksimal 72 byte.</p><label>Peran<select name="role">${Object.entries(server_js_1.roleNames).map(([value, label]) => `<option value="${value}" ${value === (u?.roles[0] || 'warehouse_operator') ? 'selected' : ''}>${h(label)}</option>`).join('')}${legacy ? '<option value="existing" selected>Pertahankan peran lama</option>' : ''}</select></label>${u ? `<label class="check-row"><input type="checkbox" name="active" ${u.active ? 'checked' : ''}> Akun aktif</label>` : ''}<p>Checker memeriksa penerimaan dan outbound. Operator menyimpan, memindahkan, picking, dan opname. Management meninjau selisih; Security mencatat gate keluar.</p>`, 'managed-user-form', id); }
@@ -12993,7 +13040,7 @@ async function serverAction(a, id) {
         return true;
     }
     if (a === 'users-prev' || a === 'users-next') {
-        userOffset = Math.max(0, userOffset + (a === 'users-prev' ? -25 : 25));
+        userOffset = Math.max(0, userOffset + (a === 'users-prev' ? -userPageSize : userPageSize));
         await loadUsers();
         render();
         return true;
@@ -15927,6 +15974,20 @@ class Warehouse {
         throw Error('Alasan review wajib diisi.'); c.reason = reason; c.status = 'Selesai'; this.log('', 'Review opname disetujui', c.location, c.location, id, reason + '; tanpa penyesuaian stok otomatis'); }
 }
 exports.Warehouse = Warehouse;
+
+},
+"wms/pagination.js":function(require,module,exports){"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.pageSizes = void 0;
+exports.paginate = paginate;
+exports.pageSizes = [10, 25, 50, 100];
+function paginate(rows, page = 1, size = 10) {
+    size = exports.pageSizes.includes(size) ? size : 10;
+    const total = rows.length, pages = Math.max(1, Math.ceil(total / size));
+    page = Math.min(pages, Math.max(1, Number.isFinite(page) ? Math.trunc(page) : 1));
+    const offset = (page - 1) * size;
+    return { items: rows.slice(offset, offset + size), page, size, pages, total, start: total ? offset + 1 : 0, end: Math.min(offset + size, total) };
+}
 
 },
 "wms/qr-content.js":function(require,module,exports){"use strict";

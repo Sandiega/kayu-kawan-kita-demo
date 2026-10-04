@@ -43,6 +43,18 @@ select{appearance:none;-webkit-appearance:none;padding-right:42px;background-ima
  #label-print-root .label-id{white-space:normal;overflow-wrap:anywhere;font-size:9pt}
  #label-print-root .label-hint{color:#000;font-size:8pt}
 }
+
+/* Consistent mobile form typography; do not trigger iOS focus zoom. */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+@media screen and (max-width:760px){
+ .search input,#scan-form input,#scan-form select,#scan-form textarea,.modal-body form input,.modal-body form select,.modal-body form textarea,dialog form input,dialog form select,dialog form textarea,.scan-control input,.scan-control select,.scan-control textarea{font-size:16px;line-height:1.5}
+ #scan-form label,dialog form label{font-size:14px;line-height:1.5}
+ #scan-form label>small,dialog form label>small{font-size:12px;line-height:1.5}
+ #scan-form .button,.scan-camera-button,.camera-dialog .button{font-size:14px;line-height:1.5}
+ .scanner-visual p,.guide p,.guide li,.camera-dialog .modal-body>p{font-size:14px;line-height:1.7}
+ .camera-dialog .camera-status,.camera-dialog .camera-count{font-size:14px!important}
+ .camera-idle span,.camera-dialog .modal-body>small{font-size:12px;line-height:1.5}
+}
 </style><title>VinFast Warehouse</title></head><body><div id="app"></div><div id="overlay-root"></div><div id="toast" role="status" aria-live="polite"></div><script>(function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -12611,7 +12623,7 @@ function table(heads, rows, localPagination = true) {
     state.page = result.page;
     tablePages.set(id, state);
     const visible = localPagination ? result.items : rows;
-    return `<div class="table-wrap"><table><thead><tr>${heads.map(x => `<th>${x}</th>`).join('')}</tr></thead><tbody>${visible.length ? visible.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('') : `<tr><td colspan="${heads.length}"><div class="empty">${(0, icon_js_1.icon)('inventory', 30)}<strong>Belum ada data</strong><span>Data yang sesuai akan muncul di sini.</span></div></td></tr>`}</tbody></table></div>${localPagination ? `<div class="pagination table-pagination"><label>Baris per halaman<select aria-label="Baris per halaman" data-table-size="${h(id)}">${pagination_js_1.pageSizes.map(size => `<option value="${size}" ${size === result.size ? 'selected' : ''}>${size}</option>`).join('')}</select></label><span aria-live="polite">${result.start}–${result.end} dari ${result.total} data</span><div><button type="button" class="button secondary" data-action="table-prev" data-id="${h(id)}" ${result.page === 1 ? 'disabled' : ''}>Sebelumnya</button><span>Halaman ${result.page} / ${result.pages}</span><button type="button" class="button secondary" data-action="table-next" data-id="${h(id)}" ${result.page === result.pages ? 'disabled' : ''}>Berikutnya</button></div></div>` : ''}`;
+    return `<div data-list-results><div class="table-wrap"><table><thead><tr>${heads.map(x => `<th>${x}</th>`).join('')}</tr></thead><tbody>${visible.length ? visible.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('') : `<tr><td colspan="${heads.length}"><div class="empty">${(0, icon_js_1.icon)('inventory', 30)}<strong>Belum ada data</strong><span>Data yang sesuai akan muncul di sini.</span></div></td></tr>`}</tbody></table></div>${localPagination ? `<div class="pagination table-pagination"><label>Baris per halaman<select aria-label="Baris per halaman" data-table-size="${h(id)}">${pagination_js_1.pageSizes.map(size => `<option value="${size}" ${size === result.size ? 'selected' : ''}>${size}</option>`).join('')}</select></label><span aria-live="polite">${result.start}–${result.end} dari ${result.total} data</span><div><button type="button" class="button secondary" data-action="table-prev" data-id="${h(id)}" ${result.page === 1 ? 'disabled' : ''}>Sebelumnya</button><span>Halaman ${result.page} / ${result.pages}</span><button type="button" class="button secondary" data-action="table-next" data-id="${h(id)}" ${result.page === result.pages ? 'disabled' : ''}>Berikutnya</button></div></div>` : ''}</div>`;
 }
 const eventName = (s) => s.replace(/\bGR\b/g, 'Good Receipt').replace(/\bGI\b/g, 'Good Issue');
 const match = (v) => JSON.stringify(v).toLowerCase().includes(query.toLowerCase());
@@ -12732,7 +12744,7 @@ document.addEventListener('click', async (event) => { const el = event.target.cl
         const state = tablePages.get(id);
         if (state) {
             state.page += a === 'table-prev' ? -1 : 1;
-            document.querySelector('#page-content').innerHTML = contents();
+            refreshListResults();
         }
         return;
     }
@@ -12933,11 +12945,7 @@ catch (e) {
 document.addEventListener('input', e => { const t = e.target; if (t.id === 'search') {
     query = t.value;
     resetTablePages();
-    const start = t.selectionStart;
-    document.querySelector('#page-content').innerHTML = contents();
-    const next = document.querySelector('#search');
-    next.focus();
-    next.setSelectionRange(start, start);
+    refreshListResults();
 } });
 document.addEventListener('change', async (e) => { const t = e.target; if (t.id === 'users-page-size') {
     const size = Number(t.value);
@@ -12959,13 +12967,13 @@ document.addEventListener('change', async (e) => { const t = e.target; if (t.id 
     if (state && pagination_js_1.pageSizes.includes(size)) {
         state.size = size;
         state.page = 1;
-        document.querySelector('#page-content').innerHTML = contents();
+        refreshListResults();
     }
     return;
 } if (t.id === 'filter') {
     filter = t.value;
     resetTablePages();
-    document.querySelector('#page-content').innerHTML = contents();
+    refreshListResults();
 } });
 window.addEventListener('hashchange', async () => { page = location.hash.slice(2) || (0, access_js_1.homePage)(w.role); if (ready)
     ensurePage(); query = ''; filter = 'Semua'; resetTablePages(); mobile = false; close(); try {
@@ -13245,6 +13253,20 @@ function ensurePage() { if (!(0, access_js_1.canPage)(w.role, page)) {
 function visibleMenus() { let group = ''; let shown = ''; return menus.map(([id, ic, label, heading]) => { if (heading)
     group = heading; return [id, ic, label, group]; }).filter(([id]) => (0, access_js_1.canPage)(w.role, id)).map(([id, ic, label, group]) => { const heading = group === shown ? '' : group; shown = group; return [id, ic, w.role === 'Security' && id === 'tasks' ? 'Gate Keluar' : label, heading]; }); }
 function demoHome() { document.title = 'Demo VinFast Warehouse · Pilih Role'; root.innerHTML = `<main class="demo-home"><header class="demo-intro"><span class="eyebrow">VINFAST WAREHOUSE · INTERACTIVE DEMO</span><h1>Satu gudang. Lima peran.</h1><p>Pilih peran untuk mencoba alur barang masuk, penyimpanan, pengeluaran, hingga review opname. Setiap peran menampilkan halaman dan pekerjaan yang relevan.</p><div class="demo-meta"><span>Tanpa login</span><span>Data contoh</span><span>Scan QR atau isi manual</span></div></header><div class="demo-role-grid">${demo_js_1.demoRoles.map((r, i) => `<section class="panel demo-role-card"><span class="demo-number">0${i + 1}</span><h2>${h(r.role)}</h2><h3>${h(r.title)}</h3><p>${h(r.description)}</p><ol>${r.steps.map(step => `<li>${h(step)}</li>`).join('')}</ol>${btn('Coba ' + r.role, 'demo-role', r.role, 'primary')}</section>`).join('')}</div><section class="panel demo-about"><div><h2>Coba alurnya bersama semua peran</h2><p>Admin → Checker → Operator Gudang → Checker → Security. Management memantau dan meninjau selisih. Gunakan “Pilih role” untuk melanjutkan pekerjaan dengan peran berikutnya.</p><p>Ini simulasi publik yang disimpan pada browser masing-masing, bukan database operasional. Perubahan tidak dibagikan ke perangkat lain. Pengelolaan akun dan pengaturan perusahaan bersama tersedia pada aplikasi dengan backend.</p></div><div>${btn('Ulangi data contoh', 'demo-reset')}<small>Mengembalikan hanya data simulasi di browser ini.</small></div></section></main>`; }
+// Keep toolbar inputs mounted: replacing/refocusing an input resets the iOS
+// keyboard layout and interrupts composition. Only the result containers change.
+function refreshListResults() {
+    const container = document.querySelector('#page-content');
+    if (!container)
+        return;
+    const next = document.createElement('template');
+    next.innerHTML = contents();
+    const current = container.querySelectorAll('[data-list-results]');
+    const updated = next.content.querySelectorAll('[data-list-results]');
+    if (current.length !== updated.length)
+        throw Error('Struktur daftar berubah. Muat ulang halaman.');
+    current.forEach((result, i) => result.replaceChildren(...Array.from(updated[i].childNodes)));
+}
 
 },
 "legacy-entry.js":function(require,module,exports){"use strict";

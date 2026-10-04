@@ -16084,7 +16084,7 @@ function createDocumentTemplate() {
         sheet.getCell(row, 2).numFmt = '@';
     }
     sheet.getCell('A1').note = 'Satu baris per unit fisik. Maksimal 20 SKU berbeda dan 500 unit. Gunakan SKU terdaftar di Master Barang.';
-    sheet.getCell('B1').note = 'Opsional. Biarkan kosong jika tidak ada serial. Format Text mempertahankan angka nol di depan, contoh 001. Serial yang diisi harus unik.';
+    sheet.getCell('B1').note = 'Opsional. Biarkan kosong jika tidak ada serial. Format Text mempertahankan angka nol di depan, contoh 001. Pasangan SKU dan serial yang diisi harus unik.';
     return book;
 }
 function value(cell, row, errors) {
@@ -16210,11 +16210,12 @@ function lineErrors(lines, data, kind, rowOffset = 1) {
         if (serial.length > 200)
             errors.push(`Baris ${row}: serial maksimal 200 karakter.`);
         if (serial) {
-            if (seen.has(serial))
-                errors.push(`Baris ${row}: serial "${serial}" duplikat dengan baris ${seen.get(serial)}.`);
+            const serialKey = JSON.stringify([sku, serial]);
+            if (seen.has(serialKey))
+                errors.push(`Baris ${row}: serial "${serial}" duplikat dengan baris ${seen.get(serialKey)}.`);
             else
-                seen.set(serial, row);
-            if (kind === 'Inbound' && data.units.some(u => u.serial === serial))
+                seen.set(serialKey, row);
+            if (kind === 'Inbound' && data.units.some(u => u.sku === sku && u.serial === serial))
                 errors.push(`Baris ${row}: serial "${serial}" sudah terdaftar di stok.`);
             if (kind === 'Outbound' && !data.units.some(u => u.sku === sku && u.serial === serial && u.status === 'Tersimpan'))
                 errors.push(`Baris ${row}: SKU dan serial tidak tersedia untuk outbound.`);

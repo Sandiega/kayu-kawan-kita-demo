@@ -12718,7 +12718,7 @@ function contents() { if (!(0, access_js_1.canPage)(w.role, page))
     case 'stock': return panel('Unit & Warehouse ID', tools('Cari Warehouse ID, SKU, serial, lokasi…', ['Tersimpan', 'Siap Disimpan', 'Ditahan', 'Sedang Disiapkan', 'Siap Keluar', 'Sudah Keluar']) + table(['WAREHOUSE ID / SERIAL', 'BARANG', 'LOKASI', 'STATUS', ''], data.units.filter(u => match({ ...u, name: product(u.sku) }) && (filter === 'Semua' || u.status === filter)).map(u => [`<button class="row-link mono" data-action="unit" data-id="${u.id}">${h(u.id)}</button><small>${h(u.serial || 'Tanpa serial')}</small>`, `${h(product(u.sku))}<small>${h(u.sku)}</small>`, `<span class="location">${h(u.location || '—')}</span>`, badge(u.status), btn('Label QR', 'label', u.id)])));
     case 'products': return panel('Master SKU', tools('Cari SKU, nama barang, kategori…') + table(['SKU / PART NUMBER', 'NAMA BARANG', 'KATEGORI', 'SATUAN', 'UNIT DI GUDANG'], data.products.filter(match).map(p => [`<b class="mono">${h(p.sku)}</b>`, h(p.name), h(p.category), h(p.unit), String(active().filter(u => u.sku === p.sku).length)])));
     case 'locations': return `<div class="location-grid">${data.locations.map(l => { const n = active().filter(u => u.location === l.code).length; return `<section class="panel location-card"><div><span class="location-symbol">${(0, icon_js_1.icon)('company', 25)}</span>${badge(l.type)}</div><h2>${h(l.code)}</h2><p>${h(l.area)}</p><div class="capacity"><span>${n} / ${l.capacity} unit</span><b>${Math.round(n / l.capacity * 100)}%</b></div><div class="meter"><i style="width:${Math.min(100, n / l.capacity * 100)}%"></i></div>${btn('QR lokasi', 'label', l.code)}</section>`; }).join('')}</div>`;
-    case 'tasks': return panel(w.role === 'Checker' ? 'Penerimaan & pemeriksaan keluar' : 'Antrian pekerjaan', tools('Cari tugas, Warehouse ID, atau dokumen…', ['Belum Dikerjakan', 'Sedang Dikerjakan', 'Selesai']) + table(['TUGAS', 'BARANG / DOKUMEN', 'LOKASI', 'PETUGAS', 'STATUS', 'DIBUAT', 'DIPERBARUI', ''], data.tasks.filter(t => (0, access_js_1.canTask)(w.role, t.kind) && match(t) && (filter === 'Semua' || t.status === filter)).map(t => [`<b>${h(t.kind)}</b><small class="mono">${t.id}</small>`, `${h(t.unit || t.doc)}<small>${h(t.doc)}</small>`, h(t.location || 'Receiving'), h(t.assignee), badge(t.status), auditCell(t, 'created'), auditCell(t, 'updated'), t.status !== 'Selesai' ? btn(t.kind === 'Gate Keluar' ? 'Periksa & Scan' : 'Kerjakan', 'task', t.id) : '<span class="muted">✓ Tercatat</span>'])));
+    case 'tasks': return (w.role === 'Security' ? gateIntro() : '') + panel(w.role === 'Checker' ? 'Penerimaan & pemeriksaan keluar' : 'Antrian pekerjaan', tools('Cari tugas, Warehouse ID, atau dokumen…', ['Belum Dikerjakan', 'Sedang Dikerjakan', 'Selesai']) + table(['TUGAS', 'BARANG / DOKUMEN', 'LOKASI', 'PETUGAS', 'STATUS', 'DIBUAT', 'DIPERBARUI', ''], data.tasks.filter(t => (0, access_js_1.canTask)(w.role, t.kind) && match(t) && (filter === 'Semua' || t.status === filter)).map(t => [`<b>${h(t.kind)}</b><small class="mono">${t.id}</small>`, `${h(t.unit || t.doc)}<small>${h(t.doc)}</small>`, h(t.location || 'Receiving'), h(t.assignee), badge(t.status), auditCell(t, 'created'), auditCell(t, 'updated'), t.status !== 'Selesai' ? btn(t.kind === 'Gate Keluar' ? 'Periksa & Scan' : 'Kerjakan', 'task', t.id) : '<span class="muted">✓ Tercatat</span>'])));
     case 'scanner': return `<div class="scanner-grid">${panel('Simpan & pindah barang', `<div class="scanner-visual">${(0, icon_js_1.icon)('inventory', 48)}<strong>Scan. Validasi. Simpan.</strong><p>Gunakan kamera ponsel untuk membaca QR, atau ketik kode secara manual.</p></div><div class="pad"><form id="scan-form">${select('mode', 'Jenis pekerjaan', ['Simpan Barang', 'Pindah Lokasi'])}${scanInput('unit', '1. Scan Warehouse ID', 'WH…')}${destinationPicker('2. Pilih lokasi tujuan')}${input('reason', 'Deskripsi', 'Keterangan penyimpanan atau pemindahan barang', false)}<p class="form-error" role="alert"></p><button class="button primary" type="submit">${(0, icon_js_1.icon)('check')} Validasi & simpan</button></form></div>`)}${panel('Panduan petugas', `<div class="pad guide"><span class="tag">OPERATOR GUDANG</span><h3>Pastikan dua kode cocok.</h3><p>Warehouse ID mengidentifikasi satu unit fisik. SKU hanya menunjukkan jenis barang.</p><ol><li>Scan QR pada unit dengan kamera atau ketik Warehouse ID.</li><li>Pilih lokasi tujuan dari dropdown, atau scan QR lokasi.</li><li>Periksa hasil validasi.</li><li>Simpan untuk mencatat waktu dan petugas.</li></ol><div class="notice">Barang ditahan, lokasi penuh, dan lokasi dalam opname tidak dapat diproses.</div>${link('tasks', 'Buka picking sesuai tugas')}</div>`)}</div>`;
     case 'opname': return panel('Sesi stock opname', `<div class="notice spaced">Blind count: jumlah sistem baru ditampilkan setelah hasil fisik dikirim. Lokasi dikunci selama sesi dan review.</div>` + table(['SESI', 'LOKASI', 'HASIL', 'STATUS', ''], data.counts.map(c => [h(c.id), h(c.location), c.status === 'Penghitungan' ? 'Jumlah sistem disembunyikan' : `${c.scanned.length} fisik / ${c.expected?.length || 0} sistem · ${c.difference} ketidaksesuaian`, badge(c.status), c.status === 'Penghitungan' && (0, access_js_1.canCount)(w.role) ? btn('Hitung', 'count', c.id) : c.status === 'Review' && (0, access_js_1.canReview)(w.role) ? btn('Review', 'review', c.id) : h(c.reason || 'Cocok')])));
     case 'issues': return panel('Masalah & selisih', tools() + table(['NOMOR / WAKTU', 'WAREHOUSE ID', 'CATATAN', 'STATUS', ''], data.issues.filter(match).map(i => [`${h(i.id)}<small>${date(i.time)}</small>`, h(i.unit || '—'), h(i.description), badge(i.status), i.status === 'Terbuka' && (0, access_js_1.canReview)(w.role) ? btn('Selesaikan', 'resolve', i.id) : '—'])));
@@ -13188,7 +13188,7 @@ async function serverAction(a, id) {
         return true;
     }
     if (a === 'gate-details') {
-        if (!(0, access_js_1.canPage)(w.role, 'gate'))
+        if (!(0, access_js_1.canTask)(w.role, 'Gate Keluar'))
             throw Error('Akses hanya untuk Security atau Admin.');
         const d = w.document(id);
         modal('Driver & kendaraan', input('driver', 'Nama driver', '', true, d.driver) + input('vehicle', 'Nomor kendaraan', '', true, d.vehicle), 'gate-form', id);
@@ -13340,9 +13340,9 @@ async function loadUnitDetail() {
             detailError = e instanceof api_client_js_1.ApiError && e.status === 404 ? 'Barang tidak ditemukan atau detail belum dapat ditampilkan untuk akun ini.' : e instanceof Error ? e.message : 'Detail belum dapat dimuat.';
     }
 }
-function auditTime(value) { if (!value)
+function auditTime(value, showRaw = true) { if (!value)
     return '—'; const time = new Date(value); if (Number.isNaN(time.getTime()))
-    return h(value); return `<time datetime="${h(value)}">${h(time.toLocaleString('id-ID', { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Asia/Jakarta' }))} WIB</time><small class="audit-raw">${h(value)}</small>`; }
+    return h(value); return `<time datetime="${h(value)}">${h(time.toLocaleString('id-ID', { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Asia/Jakarta' }))} WIB</time>${showRaw ? `<small class="audit-raw">${h(value)}</small>` : ''}`; }
 function unitDetailPage() {
     if (detailError)
         return panel('Detail barang belum tersedia', `<div class="pad"><p>${h(detailError)}</p>${link('stock', 'Kembali ke stok')}</div>`);
@@ -13353,7 +13353,7 @@ function unitDetailPage() {
 }
 function auditCell(record, kind) {
     const name = record[`${kind}_by_name`], id = record[`${kind}_by`], stamp = record[`${kind}_at`];
-    return `<div class="record-audit"><strong>${h(name || id || 'Belum tercatat')}</strong>${name && id ? `<small class="mono">${h(id)}</small>` : ''}${stamp ? auditTime(stamp) : '<small>Waktu belum tercatat</small>'}</div>`;
+    return `<div class="record-audit"><strong>${h(name || id || 'Belum tercatat')}</strong>${stamp ? auditTime(stamp, false) : '<small>Waktu belum tercatat</small>'}</div>`;
 }
 function auditChange(log) {
     const names = { id: 'ID', sku: 'Kode barang', name: 'Nama', category: 'Kategori', unit: 'Unit', reference: 'Nomor dokumen', sj: 'Surat Jalan', kind: 'Jenis', quantity: 'Jumlah', status: 'Status', date: 'Tanggal dokumen', driver: 'Driver', vehicle: 'Kendaraan', doc: 'Dokumen', location: 'Lokasi', assignee: 'Peran petugas', started: 'Mulai', finished: 'Selesai', picker: 'Pengambil', actor_id: 'Pelaksana', serial: 'Serial', condition: 'Kondisi', receipt: 'Penerimaan', created: 'Waktu penerimaan', code: 'Kode lokasi', area: 'Area', capacity: 'Kapasitas', type: 'Jenis lokasi', expected: 'Referensi hitungan sistem', scanned: 'Hasil hitung fisik', difference: 'Selisih', reason: 'Tindak lanjut', description: 'Deskripsi', time: 'Waktu' };
@@ -13382,21 +13382,22 @@ function refreshListResults() {
         throw Error('Struktur daftar berubah. Muat ulang halaman.');
     current.forEach((result, i) => result.replaceChildren(...Array.from(updated[i].childNodes)));
 }
+function gateIntro() { return `<section class="panel gate-intro"><div><h2>Pemeriksaan gate keluar</h2><p>Scan QR barang fisik, periksa dokumen dan kendaraan, lalu konfirmasi per unit.</p></div>${btn('Scan Barang Keluar', 'gate-scan', '', 'primary')}</section>`; }
 function gatePage() {
     const docs = data.docs.filter(d => d.kind === 'Outbound' && d.status === 'Diproses' && data.tasks.some(t => t.doc === d.id && t.kind === 'Ambil'));
-    return `<section class="panel gate-intro"><div><h2>Pemeriksaan gate keluar</h2><p>Scan QR barang fisik, periksa dokumen dan kendaraan, lalu konfirmasi per unit.</p></div>${btn('Scan Barang Keluar', 'gate-scan', '', 'primary')}</section><div class="gate-documents">` + panel('Dokumen menunggu keluar', tools('Cari dokumen, driver, atau kendaraan…') + table(['DOKUMEN', 'DRIVER / KENDARAAN', 'PROGRES', ''], docs.filter(match).map(d => {
+    return gateIntro() + `<div class="gate-documents">` + panel('Dokumen menunggu keluar', tools('Cari dokumen, driver, atau kendaraan…') + table(['DOKUMEN', 'DRIVER / KENDARAAN', 'PROGRES', ''], docs.filter(match).map(d => {
         const tasks = data.tasks.filter(t => t.doc === d.id && t.kind === 'Gate Keluar'), done = tasks.filter(t => t.status === 'Selesai').length, waiting = tasks.length - done;
         return [`<b>${h(d.reference)}</b><small>${h(d.sj || d.id)}</small>`, `${h(d.driver || 'Driver belum diisi')}<small>${h(d.vehicle || 'Kendaraan belum diisi')}</small>`, `${waiting} menunggu gate<small>${Math.max(0, d.quantity - done - waiting)} menunggu proses gudang</small><small>${done} / ${d.quantity} unit sudah keluar</small>`, `${btn('Detail', 'gate-document', d.id)} ${btn('Periksa & Scan', 'gate-scan', d.id)}`];
     }))) + '</div>';
 }
 function gateDocument(id) {
-    if (!(0, access_js_1.canPage)(w.role, 'gate'))
+    if (!(0, access_js_1.canTask)(w.role, 'Gate Keluar'))
         throw Error('Akses hanya untuk Security atau Admin.');
     const d = w.document(id), tasks = data.tasks.filter(t => t.doc === id && t.kind === 'Ambil');
     modal('Barang keluar · ' + d.reference, `<p>Driver: ${h(d.driver || 'Belum diisi')} · Kendaraan: ${h(d.vehicle || 'Belum diisi')}</p><div class="gate-items">${tasks.map(t => { const u = data.units.find(u => u.id === t.unit); return u ? `<article><b>${h(product(u.sku))}</b><p>${h(u.sku)} · ${h(u.id)}${u.serial ? ' · Serial: ' + h(u.serial) : ''}</p>${badge(u.status)}<small>${u.status === 'Siap Keluar' || u.status === 'Sudah Keluar' ? 'Pemeriksaan Checker selesai' : 'Menunggu proses gudang / pemeriksaan Checker'}</small></article>` : ''; }).join('')}</div><div class="gate-actions">${btn('Periksa & Scan', 'gate-scan', id)}${btn('Data kendaraan', 'gate-details', id)}</div>`);
 }
 function gateScan(docId = '') {
-    if (!(0, access_js_1.canPage)(w.role, 'gate'))
+    if (!(0, access_js_1.canTask)(w.role, 'Gate Keluar'))
         throw Error('Akses hanya untuk Security atau Admin.');
     modal('Scan Barang Keluar', `${docId ? `<div class="notice">Dokumen: <b>${h(w.document(docId).reference)}</b>. QR dokumen lain akan ditolak.</div>` : '<p>Scan QR barang di gate. Sistem akan menemukan dokumen dan tugas yang sesuai.</p>'}${scanInput('unit', 'QR barang keluar', 'Scan QR atau masukkan Warehouse ID')}<p>Belum ada perubahan stok sampai Anda menekan Konfirmasi Keluar.</p>`, 'gate-scan-form', docId);
     const f = document.querySelector('#gate-scan-form');
@@ -15973,7 +15974,7 @@ exports.rolePages = {
     Admin: ['dashboard', 'gate', 'documents', 'inbound', 'outbound', 'tasks', 'scanner', 'stock', 'products', 'locations', 'opname', 'issues', 'history', 'access', 'settings'],
     Checker: ['tasks', 'inbound', 'outbound', 'stock', 'opname', 'issues', 'history'],
     'Operator Gudang': ['tasks', 'scanner', 'stock', 'locations', 'opname', 'issues', 'history'],
-    Security: ['gate', 'tasks', 'outbound', 'history'],
+    Security: ['tasks', 'outbound', 'history'],
     Management: ['dashboard', 'documents', 'inbound', 'outbound', 'stock', 'locations', 'opname', 'issues', 'history'],
 };
 const canPage = (role, page) => !!exports.rolePages[role] && (page.startsWith('units/') || exports.rolePages[role].includes(page));
@@ -16043,7 +16044,7 @@ exports.demoRoles = [
     { role: 'Admin', title: 'Kelola dokumen & gudang', description: 'Mulai penerimaan atau pengeluaran barang dari dokumen VinFast.', steps: ['Daftarkan dokumen, lalu verifikasi.', 'Buat Good Receipt atau Good Issue.', 'Kelola SKU, lokasi, dan buka stock opname.'] },
     { role: 'Checker', title: 'Periksa barang masuk & keluar', description: 'Cocokkan jumlah, kondisi, dan identitas setiap barang.', steps: ['Buka Tugas Gudang, pilih Terima atau Cek Keluar.', 'Cetak label QR unik barang yang diterima.', 'Kerjakan Cek Keluar setelah picking selesai.'] },
     { role: 'Operator Gudang', title: 'Simpan, ambil & hitung barang', description: 'Coba scan QR, pilih lokasi, dan selesaikan pekerjaan gudang.', steps: ['Kerjakan tugas Simpan atau Scanner & Pindah.', 'Untuk picking, scan lokasi lalu Warehouse ID.', 'Hitung barang melalui sesi stock opname.'] },
-    { role: 'Security', title: 'Validasi gate keluar', description: 'Pastikan barang yang keluar sesuai tugas dan identitasnya.', steps: ['Buka Gate Keluar untuk melihat barang yang menunggu.', 'Pilih Scan Barang Keluar atau Periksa & Scan pada dokumen.', 'Konfirmasi keluar dan periksa catatan aktivitas.'] },
+    { role: 'Security', title: 'Validasi gate keluar', description: 'Pastikan barang yang keluar sesuai tugas dan identitasnya.', steps: ['Buka Tugas Gudang untuk melihat barang yang menunggu keluar.', 'Pilih Scan Barang Keluar atau Periksa & Scan pada tugas.', 'Konfirmasi keluar dan periksa catatan aktivitas.'] },
     { role: 'Management', title: 'Pantau stok & review selisih', description: 'Telusuri aktivitas gudang dan tinjau hasil pemeriksaan.', steps: ['Lihat ringkasan stok dan aktivitas.', 'Buka Stock Opname untuk review contoh selisih.', 'Isi tindak lanjut lalu telusuri Log Transaksi.'] },
 ];
 // Browser-only simulation, clearly identified by its actor names and IDs.

@@ -12858,6 +12858,7 @@ document.addEventListener('click', async (event) => { const el = event.target.cl
         return;
     }
     if (a === 'gate-details' && !server_js_1.connected) {
+        w.require('Admin', 'Security');
         const d = w.document(id);
         modal('Driver & kendaraan', input('driver', 'Nama driver', '', true, d.driver) + input('vehicle', 'Nomor kendaraan', '', true, d.vehicle), 'gate-form', id);
         return;
@@ -13187,6 +13188,8 @@ async function serverAction(a, id) {
         return true;
     }
     if (a === 'gate-details') {
+        if (!(0, access_js_1.canPage)(w.role, 'gate'))
+            throw Error('Akses hanya untuk Security atau Admin.');
         const d = w.document(id);
         modal('Driver & kendaraan', input('driver', 'Nama driver', '', true, d.driver) + input('vehicle', 'Nomor kendaraan', '', true, d.vehicle), 'gate-form', id);
         return true;
@@ -13387,6 +13390,8 @@ function gatePage() {
     }))) + '</div>';
 }
 function gateDocument(id) {
+    if (!(0, access_js_1.canPage)(w.role, 'gate'))
+        throw Error('Akses hanya untuk Security atau Admin.');
     const d = w.document(id), tasks = data.tasks.filter(t => t.doc === id && t.kind === 'Ambil');
     modal('Barang keluar · ' + d.reference, `<p>Driver: ${h(d.driver || 'Belum diisi')} · Kendaraan: ${h(d.vehicle || 'Belum diisi')}</p><div class="gate-items">${tasks.map(t => { const u = data.units.find(u => u.id === t.unit); return u ? `<article><b>${h(product(u.sku))}</b><p>${h(u.sku)} · ${h(u.id)}${u.serial ? ' · Serial: ' + h(u.serial) : ''}</p>${badge(u.status)}<small>${u.status === 'Siap Keluar' || u.status === 'Sudah Keluar' ? 'Pemeriksaan Checker selesai' : 'Menunggu proses gudang / pemeriksaan Checker'}</small></article>` : ''; }).join('')}</div><div class="gate-actions">${btn('Periksa & Scan', 'gate-scan', id)}${btn('Data kendaraan', 'gate-details', id)}</div>`);
 }
@@ -15966,9 +15971,9 @@ exports.canCount = exports.canReview = exports.homePage = exports.canPage = expo
 exports.canTask = canTask;
 exports.rolePages = {
     Admin: ['dashboard', 'gate', 'documents', 'inbound', 'outbound', 'tasks', 'scanner', 'stock', 'products', 'locations', 'opname', 'issues', 'history', 'access', 'settings'],
-    Checker: ['tasks', 'stock', 'opname', 'issues', 'history'],
+    Checker: ['tasks', 'inbound', 'outbound', 'stock', 'opname', 'issues', 'history'],
     'Operator Gudang': ['tasks', 'scanner', 'stock', 'locations', 'opname', 'issues', 'history'],
-    Security: ['gate', 'history'],
+    Security: ['gate', 'tasks', 'outbound', 'history'],
     Management: ['dashboard', 'documents', 'inbound', 'outbound', 'stock', 'locations', 'opname', 'issues', 'history'],
 };
 const canPage = (role, page) => !!exports.rolePages[role] && (page.startsWith('units/') || exports.rolePages[role].includes(page));
